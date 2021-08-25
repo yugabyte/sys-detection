@@ -32,7 +32,7 @@ if __name__ == '__main__':
         description='A library to detect the operating system, its version, architecture, etc.',
         packages=find_packages(),
         package_data={'platform_detection': ['py.typed']},
-        install_requires=[],
+        install_requires=['os-release'],
         long_description=long_description,
         long_description_content_type='text/markdown',
         extras_require={
