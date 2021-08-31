@@ -11,13 +11,17 @@
 # under the License.
 
 .PHONY: venv check
+.DEFAULT: check
 
 VENV_NAME?=venv
 VENV_ACTIVATE=. $(VENV_NAME)/bin/activate
 VENV_PYTHON=$(VENV_NAME)/bin/python3
 
 check: venv
-	bin/check_code.sh
+	$(VENV_PYTHON) -m codecheck --python-interpreter "$(VENV_PYTHON)"
+
+unittest: venv
+	$(VENV_PYTHON) -m unittest discover -s tests -p '*_test.py'
 
 venv: $(VENV_NAME)/bin/activate
 

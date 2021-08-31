@@ -30,9 +30,10 @@ if __name__ == '__main__':
         author='Mikhail Bautin',
         author_email='mbautin@users.noreply.github.com',
         description='A library to detect the operating system, its version, architecture, etc.',
-        packages=find_packages(),
+        packages=find_packages(where='src'),
+        package_dir={"": "src"},
         package_data={'platform_detection': ['py.typed']},
-        install_requires=['os-release'],
+        install_requires=['autorepr', 'os-release'],
         long_description=long_description,
         long_description_content_type='text/markdown',
         extras_require={
@@ -42,7 +43,8 @@ if __name__ == '__main__':
             #   pip install --editable '.[dev]'
             'dev': [
                 'codecheck',
-                'pycodestyle'
+                'pycodestyle',
+                'mypy'
             ]
         }
     )
