@@ -10,18 +10,76 @@
 # or implied. See the License for the specific language governing permissions and limitations
 # under the License.
 
+import os
 import platform
-import os_release  # type: ignore
+import shlex
+import re
 
-from typing import Optional, Any
+from typing import Optional, Any, Dict, Optional
 
 from autorepr import autorepr  # type: ignore
+
+VALID_ATTR_RE = re.compile('^[A-Z_]+$')
+
+
+def read_file(file_path: str) -> str:
+    with open(file_path) as input_file:
+        return input_file.read()
+
+
+def parse_value(s: str) -> str:
+    """
+    >>> parse_value('"a"')
+    'a'
+    >>> parse_value('"CentOS Linux"')
+    'CentOS Linux'
+    >>> parse_value('Hello World')
+    'Hello World'
+    """
+    tokens = list(shlex.shlex(s, posix=True))
+    if len(tokens) == 1:
+        return tokens[0]
+    return s
+
+
+class OsReleaseVars:
+    vars: Dict[str, str]
+
+    id: str
+    version_id: str
+
+    def __init__(self, vars: Dict[str, str]) -> None:
+        self.vars = vars
+        for k, v in self.vars.items():
+            if VALID_ATTR_RE.match(k):
+                setattr(self, k.lower(), v)
+
+    def __repr__(self) -> str:
+        return repr(self.vars)
+
+    __str__ = __repr__
+
+    @staticmethod
+    def read_file(file_path: str) -> 'OsReleaseVars':
+        vars: Dict[str, str] = {}
+        with open(file_path) as input_file:
+            for line in input_file:
+                line = line.strip()
+                if not line:
+                    continue
+                items = line.split('=', 1)
+                vars[items[0]] = parse_value(items[1])
+        return OsReleaseVars(vars)
+
+    def get(self, k: str) -> Optional[str]:
+        return self.vars.get(k)
 
 
 class PlatformConfiguration:
     system: str
     processor: str
-    linux_os_release: Any
+    linux_os_release: Optional[OsReleaseVars]
+    redhat_release: Optional[str]
 
     __repr__ = __str__ = autorepr(["system", "processor", "linux_os_release"])
 
@@ -29,82 +87,80 @@ class PlatformConfiguration:
             self,
             system: str,
             processor: str,
-            linux_os_release: Optional[Any]):
+            linux_os_release: Optional[OsReleaseVars],
+            redhat_release: Optional[str]):
         self.system = system
         self.processor = processor
         self.linux_os_release = linux_os_release
+        self.redhat_release = redhat_release
+
+    def is_linux(self) -> bool:
+        return self.system == 'Linux'
+
+    def is_macos(self) -> bool:
+        return self.system == 'Darwin'
+
+    def is_redhat_family(self) -> bool:
+        return self.is_linux() and bool(self.redhat_release)
 
     @staticmethod
-    def from_local_system() -> 'PlatformConfiguration':
-        system = platform.system()
-        linux_os_release: Optional[Any] = None
+    def from_etc_dir(
+            system: str,
+            processor: str,
+            etc_dir_path: str) -> 'PlatformConfiguration':
+        linux_os_release: Optional[OsReleaseVars]
+        redhat_release: Optional[str]
         if system == 'Linux':
-            linux_os_release = os_release.current_release()
+            os_release_path = os.path.join(etc_dir_path, 'os-release')
+            linux_os_release = OsReleaseVars.read_file(os_release_path)
+            redhat_release_path = os.path.join(etc_dir_path, 'redhat-release')
+            if os.path.isfile(redhat_release_path):
+                redhat_release = read_file(redhat_release_path).strip()
+                if len(redhat_release) == 0:
+                    redhat_release = None
+            else:
+                redhat_release = None
         return PlatformConfiguration(
             system=system,
-            processor=platform.processor(),
-            linux_os_release=linux_os_release
-        )
+            processor=processor,
+            linux_os_release=linux_os_release,
+            redhat_release=redhat_release)
 
-    def short_name(self) -> Optional[str]:
+    @staticmethod
+    def from_local_system(base_dir: str = '/') -> 'PlatformConfiguration':
+        return PlatformConfiguration.from_etc_dir(
+            system=platform.system(),
+            processor=platform.processor(),
+            etc_dir_path=os.path.join(base_dir, 'etc'))
+
+    def short_os_name(self) -> Optional[str]:
         """
         Returns a short platform name such as centos, ubuntu, macos, etc.
         """
-        if self.system == 'Darwin':
+        if self.is_macos():
             return 'macos'
 
-        if self.system == 'Linux':
-            name = self.linux_os_release.name
-            if name.startswith('CentOS'):
-                return 'centos'
-            
+        if self.is_linux():
+            assert self.linux_os_release is not None
+            return self.linux_os_release.id
+
         raise ValueError("Unrecognized platform: %s" % self)
-        
-    def short_version(self) -> str:
-        return self.linux_os_release.version_id
 
-"""
+    def short_os_version(self) -> str:
+        if not self.is_linux():
+            # TODO: short version strings for macOS.
+            return ''
 
+        assert self.linux_os_release is not None
+        version_id = self.linux_os_release.version_id
+        if self.is_redhat_family():
+            # For RedHat family, only keep the major version.
+            num_version_components = 1
+        else:
+            # For OSes like Ubuntu and Alpine, keep two components, like 20.04 or 3.14.
+            num_version_components = 2
 
-def is_mac() -> bool:
-    return platform.system().lower() == 'darwin'
+        return '.'.join(version_id.split('.')[:num_version_components])
 
-
-def is_linux() -> bool:
-    return platform.system().lower() == 'linux'
-
-
-def get_linux_os_release() -> Any:
-    if not is_linux():
-        return None
-
-    global _linux_os_release
-    if _linux_os_release is None:
-        _linux_os_release = os_release.current_release()
-    return _linux_os_release
-
-
-def linux_release_name_starts_with(prefix: str) -> bool:
-    return is_linux() and get_linux_os_release().name.lower().startswith(prefix.lower())
-
-
-def is_ubuntu() -> bool:
-    return linux_release_name_starts_with('ubuntu')
-
-
-def is_centos() -> bool:
-    return linux_release_name_starts_with('centos')
-
-
-def is_almalinux() -> bool:
-    return linux_release_name_starts_with('almalinux')
-
-
-def is_redhat() -> bool:
-    return linux_release_name_starts_with('red hat')
-
-
-def is_redhat_family() -> bool:
-    return is_centos() or is_almalinux() or is_redhat()
-
-"""
+    def short_os_name_and_version(self) -> str:
+        return '%s%s' % (self.short_os_name(), self.short_os_version())

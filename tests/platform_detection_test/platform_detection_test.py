@@ -15,9 +15,8 @@ import unittest
 
 from pathlib import Path
 
-import os_release  # type: ignore
+from platform_detection import PlatformConfiguration, OsReleaseVars
 
-from platform_detection import PlatformConfiguration
 
 TEST_DATA_DIR = os.path.join(
     os.path.dirname(os.path.abspath(__file__)), 'test_data')
@@ -28,30 +27,29 @@ def read_file(path: str) -> str:
         return input_file.read()
 
 
-def get_platform_conf(system: str, processor: str, test_dir_name: str) -> PlatformConfiguration:
-    return PlatformConfiguration(
+def get_platform_conf(system: str, processor: str, test_dir_path: Path) -> PlatformConfiguration:
+    return PlatformConfiguration.from_etc_dir(
         system=system,
         processor=processor,
-        linux_os_release=os_release.OsRelease.read(Path(
-            os.path.join(TEST_DATA_DIR, test_dir_name, 'etc', 'os-release')
-        )))
+        etc_dir_path=str(test_dir_path.joinpath('etc')))
 
 
 class TestPlatformDetection(unittest.TestCase):
-    def test_centos8_stream(self):
-        platform_conf = get_platform_conf('Linux', 'x86_64 ', 'centos-stream8')
-        self.assertEqual('centos', platform_conf.short_name())
-        self.assertEqual('8', platform_conf.short_version())
+    def test_all(self) -> None:
+        test_dir_path: Path
+        for test_dir_path in Path(TEST_DATA_DIR).glob('*'):
+            if not os.path.isdir(test_dir_path):
+                continue
+            dir_basename = os.path.basename(test_dir_path)
+            if dir_basename in ['centos6']:
+                # TODO: implement detecting these OSes.
+                continue
 
-    def test_centos7(self):
-        platform_conf = get_platform_conf('Linux', 'x86_64 ', 'centos7')
-        self.assertEqual('centos', platform_conf.short_name())
-        self.assertEqual('7', platform_conf.short_version())
-
-    def test_centos8(self):
-        platform_conf = get_platform_conf('Linux', 'x86_64 ', 'centos8')
-        self.assertEqual('centos', platform_conf.short_name())
-        self.assertEqual('8', platform_conf.short_version())
+            platform_conf = get_platform_conf(
+                system='Linux', processor='x86_64', test_dir_path=test_dir_path)
+            print(dir_basename)
+            print(platform_conf.short_os_name())
+            print(platform_conf.short_os_version())
 
 
 if __name__ == '__main__':

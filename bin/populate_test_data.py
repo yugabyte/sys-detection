@@ -3,16 +3,18 @@
 import os
 import subprocess
 import pathlib
+import sys
+
 from collections import defaultdict
 
-from typing import Any
+from typing import Any, Dict, List, Union, Iterable
 
 
 FILE_CONTENT_HEADER = '--- Contents of file: '
 END_OF_FILE_HEADER = '--- End of file contents'
 SPECIAL_MESSAGE_HEADER = '--- Message: '
 
-VERSIONS_BY_OS = {
+VERSIONS_BY_OS: Dict[str, Iterable[Union[int, str]]] = {
     'centos': range(6, 9),
     'ubuntu': [
         '18.04', '18.10',
@@ -36,9 +38,7 @@ def get_docker_tag(os_name: str, os_version: Any) -> str:
     return '%s:%s' % (tag_prefix, os_version)
 
 
-def main():
-    os_list = []
-    
+def main() -> None:
     test_data_dir = os.path.join(
         os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
         'tests',
@@ -52,8 +52,8 @@ def main():
 
             print("Docker tag: %s" % docker_tag)
             output = subprocess.check_output([
-                'docker', 'run', '-it', docker_tag, 
-                'sh', '-c', 
+                'docker', 'run', '-it', docker_tag,
+                'sh', '-c',
                 f'''
                 files=$( ls /etc/*release* /etc/*version* )
                 for file_path in $files; do
@@ -95,7 +95,6 @@ def main():
                 with open(full_path, 'w') as output_file:
                     print("Writing file %s" % full_path)
                     output_file.write('\n'.join(lines) + '\n')
-
 
 
 if __name__ == '__main__':
