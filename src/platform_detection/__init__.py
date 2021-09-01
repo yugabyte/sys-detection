@@ -164,3 +164,9 @@ class PlatformConfiguration:
 
     def short_os_name_and_version(self) -> str:
         return '%s%s' % (self.short_os_name(), self.short_os_version())
+
+    def id_for_packaging(self) -> str:
+        '''
+        An identifier suitable for use as a file name during packaging.
+        '''
+        return '%s-%s' % (self.short_os_name_and_version(), self.processor)
