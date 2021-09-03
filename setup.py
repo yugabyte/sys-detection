@@ -24,15 +24,15 @@ if __name__ == '__main__':
         long_description = readme_file.read()
 
     setup(
-        name='platform-detection',
+        name='sys-detection',
         version='1.0.0',
-        url='https://github.com/yugabyte/platform-detection',
+        url='https://github.com/yugabyte/sys-detection',
         author='Mikhail Bautin',
         author_email='mbautin@users.noreply.github.com',
         description='A library to detect the operating system, its version, architecture, etc.',
         packages=find_packages(where='src'),
         package_dir={"": "src"},
-        package_data={'platform_detection': ['py.typed']},
+        package_data={'sys_detection': ['py.typed']},
         install_requires=['autorepr', 'os-release'],
         long_description=long_description,
         long_description_content_type='text/markdown',

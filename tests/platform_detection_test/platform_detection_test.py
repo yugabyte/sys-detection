@@ -16,7 +16,7 @@ import platform
 
 from pathlib import Path
 
-from platform_detection import PlatformConfiguration, OsReleaseVars
+from sys_detection import PlatformConfiguration, OsReleaseVars
 
 from typing import Dict
 

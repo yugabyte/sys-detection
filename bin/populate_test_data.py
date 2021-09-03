@@ -42,7 +42,7 @@ def main() -> None:
     test_data_dir = os.path.join(
         os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
         'tests',
-        'platform_detection_test',
+        'sys_detection_test',
         'test_data'
     )
     for os_name, os_versions in VERSIONS_BY_OS.items():
