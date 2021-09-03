@@ -27,10 +27,10 @@ venv: $(VENV_NAME)/bin/activate
 
 $(VENV_NAME)/bin/activate: setup.py
 	[[ -d "$(VENV_NAME)" ]] || python3 -m venv "$(VENV_NAME)"
-	$(VENV_PYTHON) -m pip install -U pip
-	$(VENV_PYTHON) -m pip install -U wheel
-	$(VENV_PYTHON) -m pip install -e '.[dev]'
+	$(VENV_PYTHON) -m pip install --upgrade pip
+	$(VENV_PYTHON) -m pip install --upgrade wheel
+	$(VENV_PYTHON) -m pip install --editable '.[dev]'
 	touch "$(VENV_NAME)/bin/activate"
 
 clean:
-	rm -rf venv
+	rm -rf venv src/sys_detection/__pycache__ dist/*

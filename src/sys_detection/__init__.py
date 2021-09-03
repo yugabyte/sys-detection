@@ -188,13 +188,13 @@ class SysConfiguration:
         )
 
 
-def local_platform() -> SysConfiguration:
+def local_sys_conf() -> SysConfiguration:
     return SysConfiguration.from_local_system()
 
 
 def is_macos() -> bool:
-    return local_platform().is_macos()
+    return local_sys_conf().is_macos()
 
 
 def is_linux() -> bool:
-    return local_platform().is_linux()
+    return local_sys_conf().is_linux()

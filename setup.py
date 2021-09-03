@@ -25,7 +25,7 @@ if __name__ == '__main__':
 
     setup(
         name='sys-detection',
-        version='1.0.2',
+        version='1.0.3',
         url='https://github.com/yugabyte/sys-detection',
         author='Mikhail Bautin',
         author_email='mbautin@users.noreply.github.com',
@@ -33,7 +33,7 @@ if __name__ == '__main__':
         packages=find_packages(where='src'),
         package_dir={"": "src"},
         package_data={'sys_detection': ['py.typed']},
-        install_requires=['autorepr', 'os-release'],
+        install_requires=['autorepr'],
         long_description=long_description,
         long_description_content_type='text/markdown',
         extras_require={
