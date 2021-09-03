@@ -12,6 +12,7 @@
 
 import os
 import unittest
+import platform
 
 from pathlib import Path
 
@@ -41,7 +42,7 @@ def get_expected_short_name_and_version(dir_basename: str) -> str:
 
 
 class TestPlatformDetection(unittest.TestCase):
-    def test_all(self) -> None:
+    def test_linux_versions(self) -> None:
         test_dir_path: Path
         for test_dir_path in Path(TEST_DATA_DIR).glob('*'):
             if not os.path.isdir(test_dir_path):
@@ -62,6 +63,20 @@ class TestPlatformDetection(unittest.TestCase):
                 self.assertEqual(
                     '%s-%s' % (expected_short_name_and_version, processor),
                     platform_conf.id_for_packaging())
+
+    def test_local_system(self) -> None:
+        local_platform_conf = PlatformConfiguration.from_local_system()
+        self.assertEqual(platform.processor(), local_platform_conf.processor)
+        self.assertEqual(platform.system(), local_platform_conf.system)
+        if platform.system() == 'Darwin':
+            self.assertFalse(local_platform_conf.is_linux())
+            self.assertTrue(local_platform_conf.is_macos())
+        elif platform.system() == 'Linux':
+            self.assertTrue(local_platform_conf.is_linux())
+            self.assertFalse(local_platform_conf.is_macos())
+        else:
+            self.assertFalse(local_platform_conf.is_linux())
+            self.assertFalse(local_platform_conf.is_macos())
 
 
 if __name__ == '__main__':

@@ -126,12 +126,18 @@ class PlatformConfiguration:
             linux_os_release=linux_os_release,
             redhat_release=redhat_release)
 
+    _local_system_instance: Optional['PlatformConfiguration'] = None
+
     @staticmethod
     def from_local_system(base_dir: str = '/') -> 'PlatformConfiguration':
-        return PlatformConfiguration.from_etc_dir(
+        if PlatformConfiguration._local_system_instance is not None:
+            return PlatformConfiguration._local_system_instance
+        local_system_instance = PlatformConfiguration.from_etc_dir(
             system=platform.system(),
             processor=platform.processor(),
             etc_dir_path=os.path.join(base_dir, 'etc'))
+        PlatformConfiguration._local_system_instance = local_system_instance
+        return local_system_instance
 
     def short_os_name(self) -> Optional[str]:
         """
@@ -170,3 +176,15 @@ class PlatformConfiguration:
         An identifier suitable for use as a file name during packaging.
         '''
         return '%s-%s' % (self.short_os_name_and_version(), self.processor)
+
+
+def local_platform() -> PlatformConfiguration:
+    return PlatformConfiguration.from_local_system()
+
+
+def is_macos() -> bool:
+    return local_platform().is_macos()
+
+
+def is_linux() -> bool:
+    return local_platform().is_linux()
