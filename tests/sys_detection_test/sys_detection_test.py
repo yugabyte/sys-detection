@@ -16,7 +16,7 @@ import platform
 
 from pathlib import Path
 
-from sys_detection import PlatformConfiguration, OsReleaseVars
+from sys_detection import SysConfiguration, OsReleaseVars
 
 from typing import Dict
 
@@ -30,8 +30,8 @@ def read_file(path: str) -> str:
         return input_file.read()
 
 
-def get_platform_conf(system: str, processor: str, test_dir_path: Path) -> PlatformConfiguration:
-    return PlatformConfiguration.from_etc_dir(
+def get_platform_conf(system: str, processor: str, test_dir_path: Path) -> SysConfiguration:
+    return SysConfiguration.from_etc_dir(
         system=system,
         processor=processor,
         etc_dir_path=str(test_dir_path.joinpath('etc')))
@@ -41,7 +41,7 @@ def get_expected_short_name_and_version(dir_basename: str) -> str:
     return dir_basename.replace('oraclelinux', 'ol').replace('rockylinux', 'rocky')
 
 
-class TestPlatformDetection(unittest.TestCase):
+class TestSysDetection(unittest.TestCase):
     def test_linux_versions(self) -> None:
         test_dir_path: Path
         for test_dir_path in Path(TEST_DATA_DIR).glob('*'):
@@ -64,8 +64,18 @@ class TestPlatformDetection(unittest.TestCase):
                     '%s-%s' % (expected_short_name_and_version, processor),
                     platform_conf.id_for_packaging())
 
+                # We could insert more components, like the toolchain name, in the middle.
+                self.assertEqual(
+                    '%s-clang11-%s' % (expected_short_name_and_version, processor),
+                    platform_conf.id_for_packaging(mid_part=['clang11']))
+
+                # We could also change the separator.
+                self.assertEqual(
+                    '%s_gcc9_%s' % (expected_short_name_and_version, processor),
+                    platform_conf.id_for_packaging(mid_part=['gcc9'], separator='_'))
+
     def test_local_system(self) -> None:
-        local_platform_conf = PlatformConfiguration.from_local_system()
+        local_platform_conf = SysConfiguration.from_local_system()
         self.assertEqual(platform.processor(), local_platform_conf.processor)
         self.assertEqual(platform.system(), local_platform_conf.system)
         if platform.system() == 'Darwin':

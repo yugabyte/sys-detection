@@ -15,7 +15,7 @@ import platform
 import shlex
 import re
 
-from typing import Optional, Any, Dict, Optional
+from typing import Optional, Any, Dict, Optional, List
 
 from autorepr import autorepr  # type: ignore
 
@@ -75,13 +75,15 @@ class OsReleaseVars:
         return self.vars.get(k)
 
 
-class PlatformConfiguration:
+class SysConfiguration:
     system: str
     processor: str
     linux_os_release: Optional[OsReleaseVars]
     redhat_release: Optional[str]
 
     __repr__ = __str__ = autorepr(["system", "processor", "linux_os_release"])
+
+    ID_COMPONENT_SEPARATOR = '-'
 
     def __init__(
             self,
@@ -107,7 +109,7 @@ class PlatformConfiguration:
     def from_etc_dir(
             system: str,
             processor: str,
-            etc_dir_path: str) -> 'PlatformConfiguration':
+            etc_dir_path: str) -> 'SysConfiguration':
         linux_os_release: Optional[OsReleaseVars]
         redhat_release: Optional[str]
         if system == 'Linux':
@@ -120,23 +122,23 @@ class PlatformConfiguration:
                     redhat_release = None
             else:
                 redhat_release = None
-        return PlatformConfiguration(
+        return SysConfiguration(
             system=system,
             processor=processor,
             linux_os_release=linux_os_release,
             redhat_release=redhat_release)
 
-    _local_system_instance: Optional['PlatformConfiguration'] = None
+    _local_system_instance: Optional['SysConfiguration'] = None
 
     @staticmethod
-    def from_local_system(base_dir: str = '/') -> 'PlatformConfiguration':
-        if PlatformConfiguration._local_system_instance is not None:
-            return PlatformConfiguration._local_system_instance
-        local_system_instance = PlatformConfiguration.from_etc_dir(
+    def from_local_system(base_dir: str = '/') -> 'SysConfiguration':
+        if SysConfiguration._local_system_instance is not None:
+            return SysConfiguration._local_system_instance
+        local_system_instance = SysConfiguration.from_etc_dir(
             system=platform.system(),
             processor=platform.processor(),
             etc_dir_path=os.path.join(base_dir, 'etc'))
-        PlatformConfiguration._local_system_instance = local_system_instance
+        SysConfiguration._local_system_instance = local_system_instance
         return local_system_instance
 
     def short_os_name(self) -> Optional[str]:
@@ -171,15 +173,23 @@ class PlatformConfiguration:
     def short_os_name_and_version(self) -> str:
         return '%s%s' % (self.short_os_name(), self.short_os_version())
 
-    def id_for_packaging(self) -> str:
+    def id_for_packaging(
+            self,
+            mid_part: List[str] = [],
+            separator: str = ID_COMPONENT_SEPARATOR) -> str:
         '''
         An identifier suitable for use as a file name during packaging.
+        :param mid_part: Additional components to insert in the middle of the identifier,
+            between the operating system and the processor architecture.
+        :param separator: The separator to use for identifier components.
         '''
-        return '%s-%s' % (self.short_os_name_and_version(), self.processor)
+        return separator.join(
+            [self.short_os_name_and_version()] + mid_part + [self.processor]
+        )
 
 
-def local_platform() -> PlatformConfiguration:
-    return PlatformConfiguration.from_local_system()
+def local_platform() -> SysConfiguration:
+    return SysConfiguration.from_local_system()
 
 
 def is_macos() -> bool:
