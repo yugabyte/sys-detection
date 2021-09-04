@@ -19,7 +19,7 @@ import argparse
 from sys_detection import local_sys_conf
 
 
-def main():
+def main() -> None:
     arg_parser = argparse.ArgumentParser(__doc__)
     arg_parser.parse_args()
     sys_conf = local_sys_conf()
