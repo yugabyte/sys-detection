@@ -35,29 +35,24 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          os-prefix: ubuntu
-          python-version: 3.6
-        include:
-          os-prefix: ubuntu
-          python-version: 3.7
-        include:
-          os-prefix: ubuntu
-          python-version: 3.8
-        include:
-          os-prefix: ubuntu
-          python-version: 3.9
-        include:
-          os-prefix: macos
-          python-version: 3.6
-        include:
-          os-prefix: macos
-          python-version: 3.7
-        include:
-          os-prefix: macos
-          python-version: 3.8
-        include:
-          os-prefix: macos
-          python-version: 3.9
+          # Ubuntu
+          - os-prefix: ubuntu
+            python-version: 3.6
+          - os-prefix: ubuntu
+            python-version: 3.7
+          - os-prefix: ubuntu
+            python-version: 3.8
+          - os-prefix: ubuntu
+            python-version: 3.9
+          # macOS
+          - os-prefix: macos
+            python-version: 3.6
+          - os-prefix: macos
+            python-version: 3.7
+          - os-prefix: macos
+            python-version: 3.8
+          - os-prefix: macos
+            python-version: 3.9
     if: >
       (github.event_name == 'push' &&
        !contains(github.event.head_commit.message, 'skip ci') &&
