@@ -110,7 +110,7 @@ class SysConfiguration:
             system: str,
             processor: str,
             etc_dir_path: str) -> 'SysConfiguration':
-        linux_os_release: Optional[OsReleaseVars]
+        linux_os_release: Optional[OsReleaseVars] = None
         redhat_release: Optional[str]
         if system == 'Linux':
             os_release_path = os.path.join(etc_dir_path, 'os-release')
