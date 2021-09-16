@@ -21,6 +21,21 @@ from autorepr import autorepr  # type: ignore
 
 VALID_ATTR_RE = re.compile('^[A-Z_]+$')
 
+SHORT_LINUX_OS_NAMES = [
+    'almalinux',
+    'alpine',
+    'centos',
+    'debian',
+    'fedora',
+    'ol',
+    'rocky',
+    'ubuntu',
+]
+
+SHORT_OS_NAMES = ['macos'] + SHORT_LINUX_OS_NAMES
+
+SHORT_OS_NAME_REGEX_STR = '|'.join(SHORT_OS_NAMES)
+
 
 def read_file(file_path: str) -> str:
     with open(file_path) as input_file:

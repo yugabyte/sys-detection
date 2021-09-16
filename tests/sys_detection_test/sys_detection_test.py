@@ -16,9 +16,9 @@ import platform
 
 from pathlib import Path
 
-from sys_detection import SysConfiguration, OsReleaseVars
+from sys_detection import SHORT_LINUX_OS_NAMES, SysConfiguration
 
-from typing import Dict
+from typing import Set
 
 
 TEST_DATA_DIR = os.path.join(
@@ -44,6 +44,7 @@ def get_expected_short_name_and_version(dir_basename: str) -> str:
 class TestSysDetection(unittest.TestCase):
     def test_linux_versions(self) -> None:
         test_dir_path: Path
+        all_short_os_names: Set[str] = set()
         for test_dir_path in Path(TEST_DATA_DIR).glob('*'):
             if not os.path.isdir(test_dir_path):
                 continue
@@ -55,6 +56,9 @@ class TestSysDetection(unittest.TestCase):
 
                 platform_conf = get_platform_conf(
                     system='Linux', processor=processor, test_dir_path=test_dir_path)
+                short_os_name = platform_conf.short_os_name()
+                assert short_os_name is not None
+                all_short_os_names.add(short_os_name)
 
                 short_name_and_version = platform_conf.short_os_name_and_version()
                 expected_short_name_and_version = get_expected_short_name_and_version(dir_basename)
@@ -73,6 +77,11 @@ class TestSysDetection(unittest.TestCase):
                 self.assertEqual(
                     '%s_gcc9_%s' % (expected_short_name_and_version, processor),
                     platform_conf.id_for_packaging(mid_part=['gcc9'], separator='_'))
+
+        for short_os_name in all_short_os_names:
+            self.assertTrue(
+                short_os_name in SHORT_LINUX_OS_NAMES,
+                f'Unexpected short OS name (not in SHORT_LINUX_OS_NAMES): {short_os_name}')
 
     def test_local_system(self) -> None:
         local_platform_conf = SysConfiguration.from_local_system()
