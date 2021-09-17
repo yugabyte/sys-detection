@@ -60,4 +60,8 @@ jobs:
         with:
           python-version: ${{ matrix.python_version }}
       - name: Run tests
-        run: make check
+        run: |
+          if [[ $OSTYPE == darwin* ]]; then
+            brew install shellcheck
+          fi
+          make check
