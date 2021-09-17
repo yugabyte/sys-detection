@@ -27,15 +27,19 @@ VERSIONS_BY_OS: Dict[str, Iterable[Union[int, str]]] = {
     'debian': range(8, 12),
     'alpine': ['3.%d' % i for i in range(11, 15)],
     'fedora': range(33, 36),
-    'oraclelinux': range(6, 9)
+    'oraclelinux': range(6, 9),
+    'opensuse-leap': ['15.0'],
+    'opensuse-tumbleweed': ['latest'],
 }
 
 
-def get_docker_tag(os_name: str, os_version: Any) -> str:
-    tag_prefix = os_name
+def get_docker_image(os_name: str, os_version: Any) -> str:
+    image_prefix = os_name
     if os_name == 'rockylinux':
-        tag_prefix = '%s/%s' % (os_name, os_name)
-    return '%s:%s' % (tag_prefix, os_version)
+        image_prefix = '%s/%s' % (os_name, os_name)
+    elif os_name.startswith('opensuse'):
+        image_prefix = os_name.replace('-', '/')
+    return '%s:%s' % (image_prefix, os_version)
 
 
 def main() -> None:
@@ -47,12 +51,16 @@ def main() -> None:
     )
     for os_name, os_versions in VERSIONS_BY_OS.items():
         for os_version in os_versions:
-            docker_tag = get_docker_tag(os_name, os_version)
-            output_dir = os.path.join(test_data_dir, '%s%s' % (os_name, os_version))
+            docker_image = get_docker_image(os_name, os_version)
+            if os_version == 'latest':
+               output_dir_name = os_name
+            else:
+               output_dir_name = os_name + str(os_version)
+            output_dir = os.path.join(test_data_dir, output_dir_name)
 
-            print("Docker tag: %s" % docker_tag)
+            print("Docker tag: %s" % docker_image)
             output = subprocess.check_output([
-                'docker', 'run', '-it', docker_tag,
+                'docker', 'run', '-it', docker_image,
                 'sh', '-c',
                 f'''
                 files=$( ls /etc/*release* /etc/*version* )
@@ -87,7 +95,7 @@ def main() -> None:
                     raise ValueError("Unrecognized line: %s" % line)
             if len(lines_by_file) == 0:
                 sys.stderr.write(output)
-                raise RuntimeError("No OS version files found for docker tag %s" % docker_tag)
+                raise RuntimeError("No OS version files found for docker tag %s" % docker_image)
             for file_path, lines in lines_by_file.items():
                 assert file_path.startswith('/')
                 full_path = os.path.join(output_dir, file_path[1:])
