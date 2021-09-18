@@ -53,9 +53,9 @@ def main() -> None:
         for os_version in os_versions:
             docker_image = get_docker_image(os_name, os_version)
             if os_version == 'latest':
-               output_dir_name = os_name
+                output_dir_name = os_name
             else:
-               output_dir_name = os_name + str(os_version)
+                output_dir_name = os_name + str(os_version)
             output_dir = os.path.join(test_data_dir, output_dir_name)
 
             print("Docker tag: %s" % docker_image)
