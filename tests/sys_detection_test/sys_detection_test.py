@@ -30,10 +30,10 @@ def read_file(path: str) -> str:
         return input_file.read()
 
 
-def get_platform_conf(system: str, processor: str, test_dir_path: Path) -> SysConfiguration:
+def get_platform_conf(system: str, architecture: str, test_dir_path: Path) -> SysConfiguration:
     return SysConfiguration.from_etc_dir(
         system=system,
-        processor=processor,
+        architecture=architecture,
         etc_dir_path=str(test_dir_path.joinpath('etc')))
 
 
@@ -48,34 +48,38 @@ class TestSysDetection(unittest.TestCase):
         for test_dir_path in Path(TEST_DATA_DIR).glob('*'):
             if not os.path.isdir(test_dir_path):
                 continue
-            for processor in ['x86_64', 'aarch64']:
+            for architecture in ['x86_64', 'aarch64']:
                 dir_basename = os.path.basename(test_dir_path)
                 if dir_basename in ['centos6']:
                     # TODO: implement detecting these OSes.
                     continue
 
                 platform_conf = get_platform_conf(
-                    system='Linux', processor=processor, test_dir_path=test_dir_path)
+                    system='Linux', architecture=architecture, test_dir_path=test_dir_path)
                 short_os_name = platform_conf.short_os_name()
                 assert short_os_name is not None
                 all_short_os_names.add(short_os_name)
+                if short_os_name == 'opensuse-tumbleweed':
+                    # OpenSUSE Tumbleweed seems to have a new version number almost every day.
+                    # Not sure how to deal with that yet.
+                    continue
 
                 short_name_and_version = platform_conf.short_os_name_and_version()
                 expected_short_name_and_version = get_expected_short_name_and_version(dir_basename)
 
                 self.assertEqual(expected_short_name_and_version, short_name_and_version)
                 self.assertEqual(
-                    '%s-%s' % (expected_short_name_and_version, processor),
+                    '%s-%s' % (expected_short_name_and_version, architecture),
                     platform_conf.id_for_packaging())
 
                 # We could insert more components, like the toolchain name, in the middle.
                 self.assertEqual(
-                    '%s-clang11-%s' % (expected_short_name_and_version, processor),
+                    '%s-clang11-%s' % (expected_short_name_and_version, architecture),
                     platform_conf.id_for_packaging(mid_part=['clang11']))
 
                 # We could also change the separator.
                 self.assertEqual(
-                    '%s_gcc9_%s' % (expected_short_name_and_version, processor),
+                    '%s_gcc9_%s' % (expected_short_name_and_version, architecture),
                     platform_conf.id_for_packaging(mid_part=['gcc9'], separator='_'))
 
         for short_os_name in all_short_os_names:
@@ -85,7 +89,7 @@ class TestSysDetection(unittest.TestCase):
 
     def test_local_system(self) -> None:
         local_platform_conf = SysConfiguration.from_local_system()
-        self.assertEqual(platform.processor(), local_platform_conf.processor)
+        self.assertEqual(platform.machine(), local_platform_conf.architecture)
         self.assertEqual(platform.system(), local_platform_conf.system)
         if platform.system() == 'Darwin':
             self.assertFalse(local_platform_conf.is_linux())

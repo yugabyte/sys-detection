@@ -30,6 +30,8 @@ SHORT_LINUX_OS_NAMES = [
     'ol',
     'rocky',
     'ubuntu',
+    'opensuse-leap',
+    'opensuse-tumbleweed',
 ]
 
 SHORT_OS_NAMES = ['macos'] + SHORT_LINUX_OS_NAMES
@@ -92,22 +94,22 @@ class OsReleaseVars:
 
 class SysConfiguration:
     system: str
-    processor: str
+    architecture: str
     linux_os_release: Optional[OsReleaseVars]
     redhat_release: Optional[str]
 
-    __repr__ = __str__ = autorepr(["system", "processor", "linux_os_release"])
+    __repr__ = __str__ = autorepr(["system", "architecture", "linux_os_release"])
 
     ID_COMPONENT_SEPARATOR = '-'
 
     def __init__(
             self,
             system: str,
-            processor: str,
+            architecture: str,
             linux_os_release: Optional[OsReleaseVars],
             redhat_release: Optional[str]):
         self.system = system
-        self.processor = processor
+        self.architecture = architecture
         self.linux_os_release = linux_os_release
         self.redhat_release = redhat_release
 
@@ -123,7 +125,7 @@ class SysConfiguration:
     @staticmethod
     def from_etc_dir(
             system: str,
-            processor: str,
+            architecture: str,
             etc_dir_path: str) -> 'SysConfiguration':
         linux_os_release: Optional[OsReleaseVars] = None
         redhat_release: Optional[str] = None
@@ -139,7 +141,7 @@ class SysConfiguration:
                 redhat_release = None
         return SysConfiguration(
             system=system,
-            processor=processor,
+            architecture=architecture,
             linux_os_release=linux_os_release,
             redhat_release=redhat_release)
 
@@ -151,7 +153,7 @@ class SysConfiguration:
             return SysConfiguration._local_system_instance
         local_system_instance = SysConfiguration.from_etc_dir(
             system=platform.system(),
-            processor=platform.processor(),
+            architecture=platform.machine(),
             etc_dir_path=os.path.join(base_dir, 'etc'))
         SysConfiguration._local_system_instance = local_system_instance
         return local_system_instance
@@ -195,11 +197,11 @@ class SysConfiguration:
         '''
         An identifier suitable for use as a file name during packaging.
         :param mid_part: Additional components to insert in the middle of the identifier,
-            between the operating system and the processor architecture.
+            between the operating system and the architecture architecture.
         :param separator: The separator to use for identifier components.
         '''
         return separator.join(
-            [self.short_os_name_and_version()] + mid_part + [self.processor]
+            [self.short_os_name_and_version()] + mid_part + [self.architecture]
         )
 
 
