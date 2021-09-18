@@ -25,7 +25,7 @@ if __name__ == '__main__':
 
     setup(
         name='sys-detection',
-        version='1.0.5',
+        version='1.1.0',
         url='https://github.com/yugabyte/sys-detection',
         author='Mikhail Bautin',
         author_email='mbautin@users.noreply.github.com',
