@@ -38,10 +38,34 @@ SHORT_OS_NAMES = ['macos'] + SHORT_LINUX_OS_NAMES
 
 SHORT_OS_NAME_REGEX_STR = '|'.join(SHORT_OS_NAMES)
 
+REDHAT_FAMILY_OS_NAMES = ['almalinux', 'centos', 'rhel', 'rocky', 'ol']
+REDHAT_FAMILY_OS_NAMES_RE_STR = '|'.join(REDHAT_FAMILY_OS_NAMES)
+REDHAT_FAMILY_OS_AND_VERSION_NAME_RE = re.compile(
+    f'^({REDHAT_FAMILY_OS_NAMES_RE_STR})([0-9]+)$')
+
 
 def read_file(file_path: str) -> str:
     with open(file_path) as input_file:
         return input_file.read()
+
+
+def is_compatible_os_and_version(os_and_version1: str, os_and_version2: str) -> bool:
+    """
+    Determines if the two operating system name and version strings are compatible.
+    >>> is_compatible_os_and_version('centos7', 'ol8')
+    False
+    >>> is_compatible_os_and_version('centos8', 'almalinux8')
+    True
+    >>> is_compatible_os_and_version('ubuntu18.04', 'ubuntu18.04')
+    True
+    >>> is_compatible_os_and_version('ubuntu18.04', 'ubuntu20.04')
+    False
+    """
+    rhel_like1 = REDHAT_FAMILY_OS_AND_VERSION_NAME_RE.match(os_and_version1)
+    rhel_like2 = REDHAT_FAMILY_OS_AND_VERSION_NAME_RE.match(os_and_version2)
+    if rhel_like1 and rhel_like2 and rhel_like1.group(2) == rhel_like2.group(2):
+        return True
+    return os_and_version1 == os_and_version2
 
 
 def parse_value(s: str) -> str:
