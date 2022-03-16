@@ -201,7 +201,10 @@ class SysConfiguration:
             return ''
 
         assert self.linux_os_release is not None
-        version_id = self.linux_os_release.version_id
+        version_id = getattr(self.linux_os_release, 'version_id', None)
+        if not version_id:
+            # Rolling-release distributions have no version.
+            return ''
         if self.is_redhat_family():
             # For RedHat family, only keep the major version.
             num_version_components = 1
