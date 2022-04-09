@@ -38,7 +38,14 @@ def get_platform_conf(system: str, architecture: str, test_dir_path: Path) -> Sy
 
 
 def get_expected_short_name_and_version(dir_basename: str) -> str:
-    return dir_basename.replace('oraclelinux', 'ol').replace('rockylinux', 'rocky')
+    if dir_basename == 'amazonlinux':
+        return 'amzn2'
+    return (dir_basename.replace('oraclelinux', 'ol')
+                        .replace('rockylinux', 'rocky')
+                        .replace('archlinux', 'arch')
+                        .replace('archbase', 'arch')
+                        .replace('manjarolinux', 'manjaro')
+                        .replace('amazonlinux', 'amzn'))
 
 
 class TestSysDetection(unittest.TestCase):
@@ -67,10 +74,15 @@ class TestSysDetection(unittest.TestCase):
                 short_name_and_version = platform_conf.short_os_name_and_version()
                 expected_short_name_and_version = get_expected_short_name_and_version(dir_basename)
 
-                self.assertEqual(expected_short_name_and_version, short_name_and_version)
+                context_str = (
+                    f'System configuration: {platform_conf}, test directory: {dir_basename}')
+
+                self.assertEqual(
+                    expected_short_name_and_version, short_name_and_version, context_str)
                 self.assertEqual(
                     '%s-%s' % (expected_short_name_and_version, architecture),
-                    platform_conf.id_for_packaging())
+                    platform_conf.id_for_packaging(),
+                    context_str)
 
                 # We could insert more components, like the toolchain name, in the middle.
                 self.assertEqual(

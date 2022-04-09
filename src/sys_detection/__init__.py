@@ -19,7 +19,7 @@ from typing import Optional, Any, Dict, Optional, List
 
 from autorepr import autorepr  # type: ignore
 
-VALID_ATTR_RE = re.compile('^[A-Z_]+$')
+VALID_ATTR_RE = re.compile('^[a-z_]+$')
 
 SHORT_LINUX_OS_NAMES = [
     'almalinux',
@@ -32,6 +32,9 @@ SHORT_LINUX_OS_NAMES = [
     'ubuntu',
     'opensuse-leap',
     'opensuse-tumbleweed',
+    'arch',
+    'manjaro',
+    'amzn'
 ]
 
 SHORT_OS_NAMES = ['macos'] + SHORT_LINUX_OS_NAMES
@@ -84,6 +87,7 @@ def parse_value(s: str) -> str:
 
 
 class OsReleaseVars:
+    # Maps lowercase versions of keys in /etc/os-release to their values.
     vars: Dict[str, str]
 
     id: str
@@ -93,7 +97,7 @@ class OsReleaseVars:
         self.vars = vars
         for k, v in self.vars.items():
             if VALID_ATTR_RE.match(k):
-                setattr(self, k.lower(), v)
+                setattr(self, k, v)
 
     def __repr__(self) -> str:
         return repr(self.vars)
@@ -109,7 +113,7 @@ class OsReleaseVars:
                 if not line:
                     continue
                 items = line.split('=', 1)
-                vars[items[0]] = parse_value(items[1])
+                vars[items[0].lower()] = parse_value(items[1])
         return OsReleaseVars(vars)
 
     def get(self, k: str) -> Optional[str]:
@@ -201,7 +205,11 @@ class SysConfiguration:
             return ''
 
         assert self.linux_os_release is not None
-        version_id = self.linux_os_release.version_id
+        version_id: Optional[str] = self.linux_os_release.get('version_id')
+        if version_id is None:
+            # E.g. rolling distros do not have a version.
+            return ''
+
         if self.is_redhat_family():
             # For RedHat family, only keep the major version.
             num_version_components = 1

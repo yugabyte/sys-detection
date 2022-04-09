@@ -13,10 +13,13 @@ from typing import Any, Dict, List, Union, Iterable
 FILE_CONTENT_HEADER = '--- Contents of file: '
 END_OF_FILE_HEADER = '--- End of file contents'
 SPECIAL_MESSAGE_HEADER = '--- Message: '
+libc_version_HEADER = '--- glibc version: '
 
 VERSIONS_BY_OS: Dict[str, Iterable[Union[int, str]]] = {
     'centos': range(6, 9),
     'ubuntu': [
+        '16.04', '16.10',
+        '17.04', '17.10',
         '18.04', '18.10',
         '19.04', '19.10',
         '20.04', '20.10',
@@ -24,12 +27,15 @@ VERSIONS_BY_OS: Dict[str, Iterable[Union[int, str]]] = {
     ],
     'almalinux': [8],
     'rockylinux': [8],
-    'debian': range(8, 12),
+    'debian': range(6, 12),
     'alpine': ['3.%d' % i for i in range(11, 15)],
     'fedora': range(33, 36),
     'oraclelinux': range(6, 9),
     'opensuse-leap': ['15.0'],
     'opensuse-tumbleweed': ['latest'],
+    'archlinux': ['latest', 'base'],
+    'manjarolinux': ['latest'],
+    'amazonlinux': ['latest', '2018.03', '2022'],
 }
 
 
@@ -39,6 +45,8 @@ def get_docker_image(os_name: str, os_version: Any) -> str:
         image_prefix = '%s/%s' % (os_name, os_name)
     elif os_name.startswith('opensuse'):
         image_prefix = os_name.replace('-', '/')
+    elif os_name == 'manjarolinux':
+        image_prefix = '%s/base' % os_name
     return '%s:%s' % (image_prefix, os_version)
 
 
@@ -63,8 +71,9 @@ def main() -> None:
                 'docker', 'run', '-it', docker_image,
                 'sh', '-c',
                 f'''
+                ldd --version >/tmp/libc_version.txt 2>&1
                 files=$( ls /etc/*release* /etc/*version* )
-                for file_path in $files; do
+                for file_path in $files /tmp/libc_version.txt; do
                   if [ -f $file_path ]; then
                     echo "{FILE_CONTENT_HEADER}$file_path"
                     cat "$file_path"
