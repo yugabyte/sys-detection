@@ -17,11 +17,11 @@ VENV_NAME?=venv
 VENV_ACTIVATE=. $(VENV_NAME)/bin/activate
 VENV_PYTHON=$(VENV_NAME)/bin/python3
 
-check: venv
+check: venv unittest
 	$(VENV_PYTHON) -m codecheck --python-interpreter "$(VENV_PYTHON)"
 
 unittest: venv
-	$(VENV_PYTHON) -m unittest discover -s tests -p '*_test.py'
+	$(VENV_PYTHON) -m pytest --doctest-modules
 
 venv: $(VENV_NAME)/bin/activate
 
