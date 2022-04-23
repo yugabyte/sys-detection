@@ -19,6 +19,9 @@ from typing import Optional, Any, Dict, Optional, List
 
 from autorepr import autorepr  # type: ignore
 
+from sys_detection.os_compatibility import is_compatible_os
+
+
 VALID_ATTR_RE = re.compile('^[a-z_]+$')
 
 SHORT_LINUX_OS_NAMES = [

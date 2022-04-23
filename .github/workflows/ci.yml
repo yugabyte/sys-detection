@@ -24,7 +24,7 @@ on:
 
 jobs:
   build:
-    name: ${{ matrix.os_prefix }}-${{ matrix.python_version }}
+    name: ${{ matrix.os_prefix }}-py${{ matrix.python_version }}
     runs-on: ${{ matrix.os_prefix }}-latest
     if: >
       (github.event_name == 'push' &&
