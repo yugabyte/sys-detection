@@ -24,7 +24,7 @@ on:
 
 jobs:
   build:
-    name: ${{ matrix.os_prefix }}-${{ matrix.python_version }}
+    name: ${{ matrix.os_prefix }}-py${{ matrix.python_version }}
     runs-on: ${{ matrix.os_prefix }}-latest
     if: >
       (github.event_name == 'push' &&
@@ -44,8 +44,6 @@ jobs:
             python_version: 3.8
           - os_prefix: ubuntu
             python_version: 3.9
-          - os_prefix: ubuntu
-            python_version: 3.10
           # macOS
           - os_prefix: macos
             python_version: 3.6
@@ -55,8 +53,6 @@ jobs:
             python_version: 3.8
           - os_prefix: macos
             python_version: 3.9
-          - os_prefix: macos
-            python_version: 3.10
     steps:
       - uses: actions/checkout@v2
       - name: Set up Python ${{ matrix.python_version }}
